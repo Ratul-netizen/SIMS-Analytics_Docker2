@@ -218,7 +218,7 @@ export default function NewsDetail() {
         <div className="bg-white rounded-2xl shadow p-8 mb-14 max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <FaGlobe className="text-primary-600 text-2xl" />
-            <span className="font-bold text-xl text-primary-700">Media Coverage Analysis</span>
+            <span className="font-bold text-xl text-primary-700">Media Coverage Analysis -News Coverage in Local and International Media</span>
             <button
               className={`ml-auto px-4 py-1 rounded font-semibold transition ${showMediaCoverage ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
               onClick={() => setShowMediaCoverage(v => !v)}
@@ -269,7 +269,7 @@ export default function NewsDetail() {
         <div className="bg-white rounded-2xl shadow p-8 mb-14 max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <FaCheckCircle className="text-primary-600 text-2xl" />
-            <span className="font-bold text-xl text-primary-700">Fact Check & Score</span>
+            <span className="font-bold text-xl text-primary-700">Fact Check & Score - Verification Status and Credibility of the News</span>
             <button
               className={`ml-auto px-4 py-1 rounded font-semibold transition ${showFactCheckScore ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
               onClick={() => setShowFactCheckScore(v => !v)}
@@ -323,7 +323,7 @@ export default function NewsDetail() {
         <div className="bg-white rounded-2xl shadow p-8 mb-14 max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-5">
             <FaCheckCircle className="text-primary-600" />
-            <span className="font-semibold text-primary-700 flex-1">Sentiment Breakdown</span>
+            <span className="font-semibold text-primary-700 flex-1">Sentiment Breakdown - Analysis of the News's Tone and Bias</span>
             <button
               className={`ml-auto px-4 py-1 rounded font-semibold transition ${showSentimentBreakdown ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
               onClick={() => setShowSentimentBreakdown(v => !v)}
