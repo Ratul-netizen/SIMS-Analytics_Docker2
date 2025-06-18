@@ -64,7 +64,7 @@ export default function NewsDetail() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    axios.get(`http://localhost:5000/api/articles/${id}`)
+    axios.get(`http://192.168.200.160:5000/api/articles/${id}`)
       .then(res => setData(res.data))
       .catch(() => setError("Failed to load article."))
       .finally(() => setLoading(false));

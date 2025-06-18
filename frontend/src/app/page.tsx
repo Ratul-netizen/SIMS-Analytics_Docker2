@@ -129,7 +129,7 @@ export default function Dashboard() {
 
   // Fetch Indian sources for dropdown
   useEffect(() => {
-    axios.get("http://localhost:5000/api/indian-sources").then(res => setSources(res.data));
+    axios.get("http://192.168.200.160:5000/api/indian-sources").then(res => setSources(res.data));
   }, []);
 
   // Fetch dashboard data
@@ -142,7 +142,7 @@ export default function Dashboard() {
       if (range.end) params.end = range.end;
       if (src) params.source = src;
       if (showAll) params.show_all = 'true';
-      const response = await axios.get("http://localhost:5000/api/dashboard", { params });
+      const response = await axios.get("http://192.168.200.160:5000/api/dashboard", { params });
       setData(response.data);
     } catch (err) {
       setError("Failed to fetch dashboard data.");
