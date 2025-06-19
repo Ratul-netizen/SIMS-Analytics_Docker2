@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react";
+import React from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { Line, Pie, Bar } from "react-chartjs-2";
@@ -16,9 +16,14 @@ import {
   ArcElement,
   BarElement,
 } from "chart.js";
-import { FaCheckCircle, FaExclamationCircle, FaRegNewspaper, FaChartLine, FaCloud, FaNewspaper, FaGlobe } from "react-icons/fa";
+import { FaCheckCircle, FaExclamationCircle, FaRegNewspaper, FaNewspaper, FaGlobe } from "react-icons/fa";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import ReactWordcloud from 'react-wordcloud';
+
+// Type assertions for React hooks due to version conflicts
+const useState = (React as any).useState;
+const useEffect = (React as any).useEffect;
+const useMemo = (React as any).useMemo;
 
 ChartJS.register(
   CategoryScale,
@@ -93,26 +98,26 @@ function stripTLD(domain: string) {
 }
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("date");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortDir, setSortDir] = useState("desc");
   const [page, setPage] = useState(1);
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [tableLoading, setTableLoading] = useState(false);
-  const [source, setSource] = useState<string>("");
-  const [sources, setSources] = useState<{ domain: string, name: string }[]>([]);
-  const [sentimentFilter, setSentimentFilter] = useState<string>("");
-  const [keywordFilter, setKeywordFilter] = useState<string>("");
-  const [factCheckTooltip, setFactCheckTooltip] = useState<{ show: boolean, text: string, x: number, y: number }>({ show: false, text: '', x: 0, y: 0 });
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [source, setSource] = useState("");
+  const [sources, setSources] = useState([]);
+  const [sentimentFilter, setSentimentFilter] = useState("");
+  const [keywordFilter, setKeywordFilter] = useState("");
+  const [factCheckTooltip, setFactCheckTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
+  const [categoryFilter, setCategoryFilter] = useState("");
   const categoryOptions = useMemo(() => {
     const catSet = new Set((data?.latestIndianNews || []).map((item: any) => String(item.category || "")).filter(Boolean));
     return ["", ...Array.from(catSet) as string[]];
   }, [data]);
   const sentimentOptions = ["", "Positive", "Negative", "Neutral", "Cautious"];
-  const [selectedEntity, setSelectedEntity] = useState<string>("");
+  const [selectedEntity, setSelectedEntity] = useState("");
   const [showFactCheck, setShowFactCheck] = useState(false);
   const [showMediaCoverage, setShowMediaCoverage] = useState(false);
   const [showMediaComparison, setShowMediaComparison] = useState(false);
@@ -129,7 +134,7 @@ export default function Dashboard() {
 
   // Fetch Indian sources for dropdown
   useEffect(() => {
-    axios.get("http://192.168.200.160:5000/api/indian-sources").then(res => setSources(res.data));
+    axios.get("http://192.168.200.105:5000/api/indian-sources").then(res => setSources(res.data));
   }, []);
 
   // Fetch dashboard data
@@ -142,7 +147,7 @@ export default function Dashboard() {
       if (range.end) params.end = range.end;
       if (src) params.source = src;
       if (showAll) params.show_all = 'true';
-      const response = await axios.get("http://192.168.200.160:5000/api/dashboard", { params });
+      const response = await axios.get("http://192.168.200.105:5000/api/dashboard", { params });
       setData(response.data);
     } catch (err) {
       setError("Failed to fetch dashboard data.");
@@ -235,19 +240,28 @@ export default function Dashboard() {
     setPage(1);
   };
 
-  // Compute media coverage distribution using GLOBAL filtered data
+  // Calculate media coverage counts
   const mediaCoverageCounts = useMemo(() => {
-    let bangladeshi = 0, international = 0, both = 0, notCovered = 0;
-    globalFilteredNews.forEach((item: any) => {
-      const b = item.media_coverage_summary?.bangladeshi_media === 'Covered';
-      const i = item.media_coverage_summary?.international_media === 'Covered';
-      if (b && i) both++;
-      else if (b) bangladeshi++;
-      else if (i) international++;
-      else notCovered++; // Neither covered
-    });
-    return { bangladeshi, international, both, notCovered };
-  }, [globalFilteredNews]);
+    if (!data?.latestIndianNews) return { notCovered: 0, bangladeshi: 0, international: 0, both: 0 };
+    
+    return data.latestIndianNews.reduce((acc, item) => {
+      const bangladeshi = item.media_coverage_summary?.bangladeshi_media && item.media_coverage_summary.bangladeshi_media !== "Not covered";
+      const international = item.media_coverage_summary?.international_media && item.media_coverage_summary.international_media !== "Not covered";
+      
+      if (bangladeshi && international) {
+        acc.both++;
+      } else if (bangladeshi) {
+        acc.bangladeshi++;
+      } else if (international) {
+        acc.international++;
+      } else {
+        acc.notCovered++;
+      }
+      
+      return acc;
+    }, { notCovered: 0, bangladeshi: 0, international: 0, both: 0 });
+  }, [data]);
+
   const mediaCoverageLabels = [
     'Not Covered',
     'BD Covered',
@@ -666,7 +680,7 @@ export default function Dashboard() {
         </div>
         {/* Sentiment Pie Chart (replaces Bar chart) */}
         <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center h-full">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaChartLine /> Sentiment (All)</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaGlobe /> Sentiment (All)</h3>
           <div className="flex justify-center items-center w-full h-64">
             <Pie data={sentimentChartData} options={{ plugins: { legend: { position: 'bottom' } } }} />
           </div>
@@ -700,37 +714,19 @@ export default function Dashboard() {
       </div>
       {/* Top Entities (NER) word cloud */}
       <div className="bg-white rounded-lg shadow p-6 mb-8 relative">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaCloud className="text-primary-500" /> Top Entities (NER)</h3>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaGlobe className="text-primary-500" /> Top Entities (NER)</h3>
         <div className="w-full h-[24rem]">
           <ReactWordcloud
-            words={nerKeywords.map(([word, value]) => ({ text: String(word), value: Number(value) }))}
+            words={getNEREntities(globalFilteredNews).map(([word, value]) => ({ text: word, value }))}
             options={{
-              rotations: 2,
-              rotationAngles: [0, 90],
-              fontSizes: [18, 64],
-              fontFamily: 'system-ui',
-              padding: 4,
-              colors: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
-              enableTooltip: true,
-              deterministic: false,
-              scale: 'sqrt',
-              spiral: 'archimedean',
-              transitionDuration: 1000
-            }}
-            callbacks={{
-              onWordClick: (word) => {
-                setSelectedEntity(word.text);
-                setPage(1);
-              },
-              getWordTooltip: (word) => `${word.text}: ${word.value}`,
+              fontSizes: [12, 60],
+              fontFamily: 'Inter',
+              padding: 1,
+              deterministic: true,
+              rotations: 0,
+              rotationAngles: [0, 0],
             }}
           />
-          {selectedEntity && (
-            <div className="absolute left-6 bottom-6 bg-white bg-opacity-90 rounded px-3 py-2 flex items-center gap-2 shadow">
-              <span className="text-sm text-blue-700 font-semibold">Filtering by entity: {selectedEntity}</span>
-              <button className="ml-2 px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm" onClick={() => setSelectedEntity("")}>Clear</button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -958,7 +954,7 @@ export default function Dashboard() {
                   }, {})).map(([status, count]) => (
                     <div key={status} className="flex items-center gap-2">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${factCheckColorMap[status]}`}>{status}</span>
-                      <span className="text-sm text-gray-600">({count})</span>
+                      <span className="text-sm text-gray-600">({count as number})</span>
                     </div>
                   ))}
                 </div>
@@ -970,10 +966,10 @@ export default function Dashboard() {
                     const source = item.source_domain || item.source;
                     acc[source] = (acc[source] || 0) + 1;
                     return acc;
-                  }, {})).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([source, count]) => (
+                  }, {})).sort((a: [string, number], b: [string, number]) => (b[1] as number) - (a[1] as number)).slice(0, 5).map(([source, count]: [string, number]) => (
                     <div key={source} className="flex items-center gap-2">
                       <span className="text-sm font-medium">{source}</span>
-                      <span className="text-sm text-gray-600">({count})</span>
+                      <span className="text-sm text-gray-600">({count as number})</span>
                     </div>
                   ))}
                 </div>
@@ -1053,7 +1049,7 @@ export default function Dashboard() {
       {/* --- New: Media Coverage Comparison Over Time --- */}
       {data.latestIndianNews && data.latestIndianNews.some((item: any) => item.source_type) && (
         <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaChartLine /> Media Coverage Comparison Over Time</h3>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaGlobe /> Media Coverage Comparison Over Time</h3>
           <div className="w-full h-64">
             <Line data={{
               labels: Array.from(new Set(data.latestIndianNews.map((item: any) => item.date ? format(new Date(item.date), "MMM d") : "-"))),
