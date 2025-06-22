@@ -715,9 +715,20 @@ export default function Dashboard() {
       {/* Top Entities (NER) word cloud */}
       <div className="bg-white rounded-lg shadow p-6 mb-8 relative">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FaGlobe className="text-primary-500" /> Top Entities (NER)</h3>
+        {selectedEntity && (
+          <button
+            onClick={() => setSelectedEntity("")}
+            className="absolute top-4 right-4 bg-primary-500 text-white px-3 py-1 rounded-md hover:bg-primary-600 transition-colors text-sm font-semibold z-10"
+          >
+            Clear Filter: {selectedEntity}
+          </button>
+        )}
         <div className="w-full h-[24rem]">
           <ReactWordcloud
-            words={getNEREntities(globalFilteredNews).map(([word, value]) => ({ text: word, value }))}
+            callbacks={{
+              onWordClick: (word) => setSelectedEntity(word.text),
+            }}
+            words={nerKeywords.map(([text, value]) => ({ text, value }))}
             options={{
               fontSizes: [12, 60],
               fontFamily: 'Inter',
